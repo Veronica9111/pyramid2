@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="static/js/semantic.min.js"></script>
+    <link rel="stylesheet" type="text/css" class="ui" href="static/css/semantic.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="static/js/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/css/jquery-ui.min.css">
+    <script type="text/javascript" src="static/js/select2.full.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/css/select2.min.css">
+
+    <style>
+    #user-table-div{
+        margin-top: 5em;
+        width: 70%;
+        margin-left: 20%;
+    }
+
+    #tabs{
+        margin-top: 6em;
+        margin-left: 15%;
+        margin-right: 5%;
+    }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container">
+    <a id="logout">Logout</a>
+  </div>
+</nav>
+    <div class="ui sidebar visible vertical menu pushable" style="margin-top: 3em !important;">
+    <a class="item">
+      1
+    </a>
+    <a class="item">
+      2
+    </a>
+    <a class="item">
+      3
+    </a>
+  </div>
+  <div class="pusher">
+    <!-- Site content !-->
+  </div>
+    <div id="tabs">
+  <ul>
+    <li><a href="#tabs-1">用户</a></li>
+    <li><a href="#tabs-2">角色</a></li>
+    <li><a href="#tabs-3">权限</a></li>
+  </ul>
+  <div id="tabs-1">
+    <div id="user-table-div">
+    <table id="user-table" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Password</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+    </table>
+    </div>
+    </div>
+    <div id="tabs-2">
+        <input type="button" id="add-role" value="添加角色" />
+        <div id="role-table-div">
+            <table id="role-table" class="display" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div id="tabs-3">
+        <input type="button" id="add-permission" value="添加权限"/>
+        <div id="permission-table-div">
+            <table id="permission-table" class="display" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    </div>
+
+    <div id="permission-dialog">
+        <input id='permission-name' type='textfield' class='form-control'/>
+    </div>
+
+    <div id="role-dialog">
+        <input id="role-name" type="textfield" class="form-control"/>
+        <select id="permissions" multiple="multiple" class="form-control">
+        </select>
+    </div>
+    <script>
+
+        
+             $( "#tabs" ).tabs();
+            $("#logout").on('click', function(){
+            $.post('/logout', {}, function(data){
+                if(data.status == 'ok'){
+                    window.location.href = '/';
+                }
+            })
+        });
+        //$('.ui.sidebar').sidebar('toggle');
+        $.get('/users', function(data){
+        var dataSet = $.parseJSON(data).data;
+        console.log(dataSet);
+        dataSet = $.parseJSON(dataSet);
+        $('#user-table').DataTable( {
+            "processing": true,
+            "data" : dataSet,
+        "columns": [
+            { "title": "name" },
+            { "title": "password" },
+            { "title": "roles" },
+        ]
+    } );
+
+            console.log($.parseJSON(data));
+        });
+
+    $.post('/permissions', {'type': 'datatable'},function(data){
+        var dataSet = $.parseJSON(data).data;
+        dataSet = $.parseJSON(dataSet);
+        console.log(dataSet);
+        var permissionTable = $('#permission-table').DataTable({
+            'data': dataSet,
+            'columns': [
+                {'title': 'name'},
+                {'title': ''}
+            ]
+        });
+
+        $(".delete-permission").on('click', function(){
+            var id = $(this).attr('id');
+            var td = $(this);
+            $.post('/permission', {'method': 'DELETE', 'id': id}, function(){
+                permissionTable
+                    .row( td.parents('tr') )
+                    .remove()
+                    .draw();
+            });
+        });
+         $("#add-permission").on('click', function(){
+            dialog = $( "#permission-dialog" ).dialog({
+              autoOpen: false,
+              height: 300,
+              width: 350,
+              modal: true,
+              buttons: {
+                "添加": function(){
+                $.post('/permission', {'method': 'POST', 'name': $('#permission-name').val()}, function(data){
+                var dataSet = $.parseJSON(data).data;
+                dataSet = $.parseJSON(dataSet);
+                permissionTable
+                .row.add(dataSet)
+                .draw()
+                .node();
+                dialog.dialog("close");    
+                });
+            },
+                Cancel: function() {
+                  dialog.dialog( "close" );
+                }
+              },
+              close: function() {
+                dialog.dialog("close");
+                }
+            });
+         
+              dialog.dialog( "open" );
+    });
+   });
+
+    $.get('/roles', {}, function(data){
+        var dataSet = $.parseJSON(data).data;
+        dataSet = $.parseJSON(dataSet);
+        var roleTable = $("#role-table").DataTable({
+            'data': dataSet,
+            'columns': [
+                {'title': 'name'},
+                {'title': ''}
+            ]
+        });
+
+        $("#add-role").on('click', function(){
+            dialog = $("#role-dialog").dialog({
+                autoOpen: false,
+                height: 300,
+                width: 350,
+                modal: true,
+                buttons: {
+                    "添加": function(){
+                        $.post('/role', {'method': 'POST', 'name': $('#role-name').val()}, function(data){
+                            var dataSet = $.parseJSON(data).data;
+                            dataSet = $.parseJSON(dataSet);
+                            roleTable
+                            .row.add(dataSet).draw().node();
+                            dialog.dialog("close");
+                        });
+                    },
+                    Cancel: function(){
+                        dialog.dialog("close");
+                    }
+                },
+                close: function(){
+                    dialog.dialog("close");
+                }
+            });
+            $.post('/permissions',{'type': 'list'}, function(data){
+                var dataSet = $.parseJSON(data).data;
+                dataSet = $.parseJSON(dataSet);
+                console.log(dataSet);
+                for(var key in dataSet){
+                    console.log(dataSet[key]['id']);
+                    var id = dataSet[key]['id'];
+                    var name = dataSet[key]['name'];
+                    $("#permissions").append("<option value='"+id+"'>" + name + "</option>");
+                                        
+                }
+            });
+            $("#permissions").select2();
+            dialog.dialog("open");
+        });
+
+        $(".edit-role").on('click', function(){
+           dialog = $("#edit-role-dialog").dialog({
+                autoOpen: false,
+                height: 300,
+                width: 350,
+                modal: true,
+                buttons: {
+                    "编辑": function(){
+                        $.post('/post', {'method': 'UPDATE', 'name': $('#role-name').val(), 'permissions': permissions}, function(data){
+
+                        });
+                    },
+                    Cancel: function(){
+                        dialog.dialog("close");
+                    }
+                },
+                close: function(){
+                    dialog.dialog("close");
+                }
+            }); 
+        });
+    });
+    </script>
+</body>
+</html>

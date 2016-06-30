@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <style>
+        #login-form{
+            margin: auto 40%;
+            border: 1px lightgrey solid;
+            border-radius: 0.5em;
+            padding: 1em;
+        }
+
+        .form-control{
+            margin-top: 1em;
+            border-radius: 0.3em !important;
+        }
+
+        #login{
+            margin-top: 1em;
+        }
+    </style>
+
+</head>
+<body>
+    <h1> Hi ${name}</h1>
+    <div id='login-form' class="">
+        <div class="input-group">
+            <input id="username" type="textfield" class="form-control" placeholder="username"/>
+            <input id="password" type="password" class="form-control"/>
+            <input id="login" type="button" class="btn btn-primary" value="Login"/>
+        </div>
+    </div>
+    <script>
+        $("#login").on('click', function(){
+            var name = $("#username").val();
+            var password = $("#password").val();
+            $.post('/login', {'name': name, 'password': password}, function(data){
+                console.log(data);
+                if(data.status == 'ok'){
+                    console.log(data.roles.indexOf('admin'));
+                    if(data.roles.indexOf('admin') != -1){
+                        window.location.href = '/manage';
+                    }else{
+                        window.location.href="/first";
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
