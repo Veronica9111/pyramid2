@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="static/js/jquery.min.js"></script>
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
 
     <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/css/bootstrap-theme.min.css">
 
     <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script src="static/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="static/js/semantic.min.js"></script>
     <link rel="stylesheet" type="text/css" class="ui" href="static/css/semantic.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
-    <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="static/js/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="static/js/jquery-ui.min.js"></script>
     <link rel="stylesheet" type="text/css" href="static/css/jquery-ui.min.css">
     <script type="text/javascript" src="static/js/select2.full.min.js"></script>
@@ -192,17 +192,48 @@
     });
    });
 
-    $.get('/roles', {}, function(data){
+    $.post('/roles', {'type': 'list'}, function(data){
         var dataSet = $.parseJSON(data).data;
         dataSet = $.parseJSON(dataSet);
-        var roleTable = $("#role-table").DataTable({
-            'data': dataSet,
-            'columns': [
-                {'title': 'name'},
-                {'title': ''}
-            ]
+        console.log(dataSet);
+        $.post('/permissions', {'type': 'list'}, function(data){
+            permissionData = $.parseJSON(data).data;
+            permissionData = $.parseJSON(permissionData);
+            var tableHtml = "";
+            tableHtml += "<thead><tr><td></td>";
+            for(var key in permissionData){
+                tableHtml += "<td>" + permissionData[key]['name'] + "</td>";
+            }
+            tableHtml += "</tr></thead><tbody>";
+            for(var key in dataSet){
+                tableHtml += "<tr><td>" + dataSet[key]['name'] + "</td>";
+                for (var key2 in permissionData){
+                    if(dataSet[key]['permissions'].indexOf(permissionData[key2]['id']) != -1){
+                        tableHtml += "<td><input type='checkbox' class='role-permission' role='"+dataSet[key]['id']+"' permission='"+permissionData[key2]['id']+"' checked='checked'/></td>";
+                    }else{
+                        tableHtml += "<td><input type='checkbox' class='role-permission' role='"+dataSet[key]['id']+"' permission='"+permissionData[key2]['id']+"'/></td>";
+                    }
+                }
+                tableHtml += "</tr>";
+            }
+            tableHtml += "</tbody>";
+            $("#role-table").append(tableHtml);
+            $(".role-permission").on('change', function(){
+                var checked = $(this).prop('checked');
+                var roleId = $(this).attr('role');
+                var permissionId = $(this).attr('permission');
+                console.log(checked);
+                console.log(roleId);
+                console.log(permissionId);
+                $.post('/role', {'method': 'UPDATE_ROLE_PERMISSION', 'role_id': roleId, 'permission_id': permissionId, 'checked': checked}, function(data){
+                
+                });
+            });
+
         });
 
+        
+ 
         $("#add-role").on('click', function(){
             dialog = $("#role-dialog").dialog({
                 autoOpen: false,
@@ -211,11 +242,31 @@
                 modal: true,
                 buttons: {
                     "添加": function(){
-                        $.post('/role', {'method': 'POST', 'name': $('#role-name').val()}, function(data){
-                            var dataSet = $.parseJSON(data).data;
-                            dataSet = $.parseJSON(dataSet);
-                            roleTable
-                            .row.add(dataSet).draw().node();
+                        $.post('/role', {'method': 'POST', 'name': $('#role-name').val(), 'permissions': $("#permissions").val().toString()}, function(data){
+                            console.log(data);
+                            var roleId = $.parseJSON($.parseJSON(data).data);
+                            var rowHtml = "<tr><td>"+ $("#role-name").val()+"</td>";
+                            console.log(permissions);
+                            for(var key in permissions){
+                                if($("#permissions").val().indexOf(permissions[key]['id']) != -1){
+                                    rowHtml += "<td><input type='checkbox' role='"+roleId+"' permission='"+permissions[key]['id']+"' class='role-permission' checked='checked'></td>"
+                                }else{
+                                    rowHtml += "<td><input type='checkbox' role='"+roleId+"' permission='"+permissions[key]['id']+"' class='role-permission'></td>"
+                                }
+                            }
+                            $("#role-table").append(rowHtml);
+                            $(".role-permission").on('change', function(){
+                                var checked = $(this).prop('checked');
+                                var roleId = $(this).attr('role');
+                                var permissionId = $(this).attr('permission');
+                                console.log(checked);
+                                console.log(roleId);
+                                console.log(permissionId);
+                                $.post('/role', {'method': 'UPDATE_ROLE_PERMISSION', 'role_id': roleId, 'permission_id': permissionId, 'checked': checked}, function(data){
+                                
+                                });
+                            });
+
                             dialog.dialog("close");
                         });
                     },
@@ -230,6 +281,7 @@
             $.post('/permissions',{'type': 'list'}, function(data){
                 var dataSet = $.parseJSON(data).data;
                 dataSet = $.parseJSON(dataSet);
+                permissions = dataSet;
                 console.log(dataSet);
                 for(var key in dataSet){
                     console.log(dataSet[key]['id']);
@@ -239,7 +291,7 @@
                                         
                 }
             });
-            $("#permissions").select2();
+            $("#permissions").select2(); 
             dialog.dialog("open");
         });
 

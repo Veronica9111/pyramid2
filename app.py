@@ -83,13 +83,17 @@ def operate_permission(request):
 
 @view_config(route_name='get_all_roles', renderer='string')
 def get_all_roles(request):
+    type = request.params['type']
     role_db = Role()
     roles = role_db.get_all_roles()
     data = []
     for role in roles:
         edit_btn = "<input name='%s' class='edit-role btn btn-primary' type='button' value='编辑'/>" % role['_id']
         delete_btn = "<input id='%s' class='delete-role btn btn-danger' type='button' value='删除' />" % role['_id']
-        data.append([role['name'],edit_btn, delete_btn])
+        if type == 'datatable':
+            data.append([role['name'],edit_btn, delete_btn])
+        elif type == 'list':
+            data.append({'name': role['name'], 'id': '%s' % (role['_id']), 'permissions': role['permissions']})
     str = json.dumps(data, encoding="UTF-8", ensure_ascii=False)
     return json.dumps({'status': 'ok', 'data': str}, encoding="UTF-8", ensure_ascii=False)
 
@@ -101,13 +105,19 @@ def operate_role(request):
         print 'get one role'
     elif method == 'POST':
         name = request.params['name']
-        id = role_db.add_role(name)
-        delete_btn = "<input id='%s' class='delete-role btn btn-danger' type='button' value='删除' />" % id
-        data = [name, delete_btn]
+        print request.params
+        permissions = request.params['permissions'].split(',')
+        id = role_db.add_role(name, permissions)
+        data = "%s" % id
         str = json.dumps(data, encoding="UTF-8", ensure_ascii=False)
         return json.dumps({'status': 'ok', 'data': str}, encoding="UTF-8", ensure_ascii=False)
     elif method == 'DELETE':
         print 'delete one role'
+    elif method == 'UPDATE_ROLE_PERMISSION':
+        roleId = request.params['role_id']
+        permissionId = request.params['permission_id']
+        checked = request.params['checked']
+        role_db.add_permission_to_role(roleId, permissionId, checked)
 
 
 @view_config(route_name='logout', renderer='json')
