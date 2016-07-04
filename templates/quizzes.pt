@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="static/js/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="static/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="static/js/semantic.min.js"></script>
+    <link rel="stylesheet" type="text/css" class="ui" href="static/css/semantic.css">
+    <link rel="stylesheet" type="text/css" href="static/css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="static/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="static/js/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/css/jquery-ui.min.css">
+    <script type="text/javascript" src="static/js/select2.full.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/css/select2.min.css">
+
+    <style>
+    #user-table-div{
+        margin-top: 5em;
+        width: 70%;
+        margin-left: 20%;
+    }
+
+    #tabs{
+        margin-top: 6em;
+        margin-left: 15%;
+        margin-right: 5%;
+    }
+    </style>
+</head>
+<body>
+    <input id='add-quiz' type='button' value='添加' />
+    <div id="quiz-table-div">
+        <table id="quiz-table" class="display" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Updated Time</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    <script>
+    $.post('/sets', {'type': 'datatable'}, function(data){
+        console.log(data);
+        var dataSet = $.parseJSON(data).data;
+        console.log(dataSet);
+        $('#quiz-table').DataTable({
+            "processing": true,
+            "data": dataSet,
+            "columns": [
+                {"title": "Name"},
+                {"title": "Updated Time"},
+                {"title": ""},
+                {"title": ""},
+                {"title": ""},
+            ]
+        });
+        
+    });
+
+    $("#add-quiz").on('click', function(){
+        window.location.href = '/quiz';
+    });
+$("#quiz-table").on("click", ".edit-quiz", function(){
+            console.log('hit');
+            var id = $(this).attr('name');
+            window.location.href = '/quiz/' + id;
+        });
+
+    </script>
+</body>
+</html>

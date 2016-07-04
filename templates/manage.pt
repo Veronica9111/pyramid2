@@ -41,8 +41,8 @@
   </div>
 </nav>
     <div class="ui sidebar visible vertical menu pushable" style="margin-top: 3em !important;">
-    <a class="item">
-      1
+    <a class="item" href="/show">
+      Show
     </a>
     <a class="item">
       2
