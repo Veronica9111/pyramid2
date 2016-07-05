@@ -160,6 +160,14 @@ def operate_set(request):
         quiz_db.add_quiz(name, itemList, user_name, time)
         print 'post'
     elif method == 'UPDATE':
+        name = request.params['name']
+        items = request.params['items'].split(',')
+        itemList = []
+        for i in range(0, len(items), 2):
+            itemList.append({'question': items[i], 'answer': items[i+1]})
+        time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        id = request.params['id']
+        quiz_db.update_quiz(id, itemList, name, time)
         print 'update'
     elif method == 'DELETE':
         print 'delete'

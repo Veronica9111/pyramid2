@@ -18,8 +18,8 @@ class Quiz:
         id = quizzes.insert_one(quiz)
         return id
 
-    def update_quiz(self, objectId, quiz_items):
-        self._db.quizzes.update({'_id': ObjectId(objectId)}, {'$set':{'items': quiz_items}}, False, True)
+    def update_quiz(self, objectId, quiz_items, name, updated_time):
+        self._db.quizzes.update({'_id': ObjectId(objectId)}, {'$set':{'items': quiz_items, 'name': name, 'updated_time': updated_time}}, False, True)
 
     def get_all_quizzes(self):
         return self._db.quizzes.find()
