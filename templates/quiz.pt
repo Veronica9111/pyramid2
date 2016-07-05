@@ -34,6 +34,11 @@
     </style>
 </head>
 <body>
+    <div id="upload-form">
+        <label for="quiz">Quiz</label>
+        <input id="quiz" name="quiz" type="file" value="" />
+        <input id="upload" type="button" value="submit" />
+    </div>
     <input id="quiz-name" class="form-control"/>
     <table id='quiz-table'>
         <thead>
@@ -78,6 +83,43 @@
                 
             });
             console.log(set);
+        });
+        $("#upload").on("click", function(){
+            var files = $("#quiz")[0].files;
+            var data = new FormData();
+            data.append("key", "value");
+            $.each(files, function(key, value)
+            {
+                data.append(key, value);
+            });
+            $.ajax({
+                url: '/upload_quiz',
+                type: 'POST',
+                data: data,
+                cache: false,
+                dataType: 'json',
+                processData: false, // Don't process the files
+                contentType: false, // Set content type to false as jQuery will tell the server its a query string request
+                success: function(data, textStatus, jqXHR)
+                {
+                    if(typeof data.error === 'undefined')
+                    {
+                        // Success so call function to process the form
+                        submitForm(event, data);
+                    }
+                    else
+                    {
+                        // Handle errors here
+                        console.log('ERRORS: ' + data.error);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown)
+                {
+                    // Handle errors here
+                    console.log('ERRORS: ' + textStatus);
+                    // STOP LOADING SPINNER
+                }
+            });
         });
     </script>
 </body>

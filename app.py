@@ -20,6 +20,7 @@ from db.user import User
 from db.permission import Permission
 from db.role import Role
 from db.quiz import Quiz
+from quiz import Quiz_Handler
 
 def hello_world(request):
     return Response('Hello %(name)s!' % request.matchdict)
@@ -181,6 +182,14 @@ def upload_img(request):
         shutil.copyfileobj(input_file, fd)
     return {'status': 'ok'}
 
+@view_config(route_name='upload_quiz', renderer='json')
+def upload_quiz(request):
+    file = request.POST['0'].file
+    qh = Quiz_Handler(file)
+    qh.handle()
+    print file.readlines()
+    return {'status': 'ok'}
+
 @view_config(route_name='logout', renderer='json')
 def logout(request):
     del request.session['name']
@@ -210,16 +219,22 @@ def manage(request):
 def quizzes(request):
     return {'name': 'quizzes'}
 
+@view_config(renderer='templates/test.pt')
+def test(request):
+    if 'id' in request.matchdict:
+        return {'name': 'test'}
+
 def quiz(request):
     print request.matchdict
     if 'id' in request.matchdict:
-        return render_to_response('__main__:templates/editquiz.pt',
+        if request.matchdict['id'] == '0':
+            return render_to_response('__main__:templates/quiz.pt',
+                                    {'name': 'name'},
+                                    request=request)
+        else:
+            return render_to_response('__main__:templates/editquiz.pt',
                               {'foo':1, 'bar':2},
                               request=request)
-    else:
-        return render_to_response('__main__:templates/quiz.pt',
-                                {'name': 'name'},
-                                request=request)
 
 if __name__ == '__main__':
     config = Configurator()
@@ -237,10 +252,13 @@ if __name__ == '__main__':
     config.add_route('operate_role', '/role')
     config.add_route('show', '/show')
     config.add_route('upload_img', '/upload_img')
+    config.add_route('upload_quiz', '/upload_quiz')
+    config.add_route('download_quiz', '/download_quiz')
     config.add_route('quizzes', '/quizzes')
     config.add_route('quiz', '/quiz/{id}')
     config.add_route('operate_set', '/set')
     config.add_route('get_all_sets', '/sets')
+    config.add_route('test', '/test/{id}')
     config.add_route('index', '')
     config.add_static_view(name='static', path='/Users/veronica/Documents/pyramid2/static')
     config.add_view(hello_world, route_name='hello')
@@ -248,6 +266,7 @@ if __name__ == '__main__':
     config.add_view(first, route_name='first', renderer='__main__:templates/first.pt')
     config.add_view(manage, route_name='manage', renderer='__main__:templates/manage.pt')
     config.add_view(show, route_name='show', renderer='__main__:templates/show.pt')
+    config.add_view(test, route_name='test', renderer='__main__:templates/test.pt')
     config.add_view(login, route_name='login', renderer='json')
     config.add_view(logout, route_name='logout', renderer='json')
     config.add_view(get_all_users, route_name='get_all_users', renderer='string')
@@ -256,6 +275,7 @@ if __name__ == '__main__':
     config.add_view(get_all_roles, route_name='get_all_roles', renderer='string')
     config.add_view(operate_role, route_name='operate_role', renderer='string')
     config.add_view(upload_img, route_name='upload_img', renderer='json')
+    config.add_view(upload_quiz, route_name='upload_quiz', renderer='json')
     config.add_view(quiz, route_name='quiz')#, renderer='__main__:templates/quiz.pt')
     config.add_view(quizzes, route_name='quizzes', renderer='__main__:templates/quizzes.pt')
     config.add_view(get_all_sets, route_name='get_all_sets', renderer='string')

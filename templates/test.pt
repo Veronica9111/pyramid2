@@ -31,53 +31,63 @@
         margin-left: 15%;
         margin-right: 5%;
     }
+
+    #correct{
+        color: green;
+    }
     </style>
 </head>
 <body>
-    <input id="quiz-name" class="form-control"/>
-    <table id='quiz-table'>
-        <thead>
-            <tr>
-                <td>Q</td>
-                <td>A</td>
-                <td></td>
-            </tr>
-        </thead>
-        <tr>
-            <td><input class='input' count=1 type='textfield' class='form-control'></td>
-            <td><input class='input' count=2 type='textfield' class='form-control'></td>
-            <td><span class='glyphicon glyphicon-remove'></span></td>
-        </tr>
-
-    </table>
-    <input id='submit' type='button' class='btn btn-primary' value='提交'/>
-
+    <div class="jumbotron">
+        <h1 id='question'></h1>
+        <input id='answer' class='form-control'/>
+        <h2 id='correct'></h2>
+    </div>
     <script>
-        var count = 2;
-        $("#quiz-table").on("keydown", ".input", function(event){
-            console.log('hit');
-            if(event.keyCode == 9){
-                if($(this).attr('count') == count){
-                    var rowHtml = "<tr><td>";
-                    rowHtml += "<input class='input' count=" + (count + 1) + " type='textfield' class='form-control' /></td>";
-                    rowHtml += "<td><input class='input' count=" + (count + 2) + " type='textfield' class='form-control' /></td>";
-                    rowHtml += "<td><span class='glyphicon glyphicon-remove remove'></span></td>";
-                    $("#quiz-table").append(rowHtml);
-                    count += 2;
+        count = 0;
+        result = {};
+        var id = window.location.pathname.split("/")[2];
+        $.post('/set', {'id': id, 'method': 'GET'}, function(data){
+            var data = $.parseJSON(data);
+            items = data.data['items'];
+            length = items.length;
+            if(length > 0){
+                $("#question").html(items[0]['question']);
+                answer = items[0]['answer'];
+                count = 1;
+            }
+                
+            
+        });
+        $('#answer').on('keypress', function(event){
+            if(event.keyCode == 13){
+                if($('#answer').val() == answer){
+                    console.log('correct');
+                    if(!(count in result)){
+                        result[count] = 0;
+                    }
+                    $("#correct").html("");
+                    if(count <length){
+                        $("#question").html(items[count]['question']);
+                        $("#answer").val("");
+                        answer = items[count]['answer'];
+                        count++;
+                    }else{
+                        console.log(result);
+                        //alert("Correct rate is: " + (correctCount * 100 /length) + "%");
+                    }
+
+                }else{
+                    if(!(count in result)){
+                        result[count] = 1;
+                    }else{
+                        result[count] += 1;
+                    }
+                    console.log('wrong');
+                    $("#correct").html(answer).show("slow").hide("slow");
+                    $("#answer").val("");
                 }
             }
-        });
-
-        $("#quiz-table").on("click", ".remove", function(){
-            $(this).parent().parent().remove();
-        });
-        $("#submit").on("click", function(){
-            $("#quiz-name").val();
-            var set = $(".input").map(function(){return $(this).val();}).get();
-            $.post('/set', {'method': 'POST', 'name': $("#quiz-name").val(), 'items': set.toString()}, function(data){
-                
-            });
-            console.log(set);
         });
     </script>
 </body>
