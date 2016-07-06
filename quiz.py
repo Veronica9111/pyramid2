@@ -4,7 +4,7 @@ class Quiz_Handler:
     def __init__(self, file):
         self._file = file;
 
-    def handle(self):
+    def get_items(self):
         lines = []
         quiz = []
         lines = self._file.readlines()
@@ -15,7 +15,7 @@ class Quiz_Handler:
                 continue
             else:
                 quiz.append({'question': question, 'answer': answer})
-        print quiz
+        return quiz
 
 if  __name__ == '__main__':
     qh = Quiz_Handler('/Users/veronica/Desktop/quiz.csv')

@@ -18,6 +18,7 @@
     <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.min.css">
     <script type="text/javascript" src="/static/js/select2.full.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/css/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui-1.10.0.custom.css">
 
     <style>
     #user-table-div{
@@ -31,16 +32,58 @@
         margin-left: 15%;
         margin-right: 5%;
     }
+
+    #quiz-name{
+        width: 30%;
+        margin-left: 35%;
+        display: inline-block;
+        margin-right: 1%;
+    }
+
+    #quiz-table{
+        margin-left: 30%;
+    }
+
+    #quiz-table td{
+        padding-left: 1em;
+        padding-top: 0.5em;
+    }
+
+    .remove{
+        cursor: pointer;
+    }
+
+    #submit{
+        float:right;
+        margin-right: 30%;
+        margin-top: 2em;
+    }
     </style>
 </head>
 <body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">WebSiteName</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#">Page 1</a></li>
+            <li><a href="#">Page 2</a></li> 
+            <li><a href="#">Page 3</a></li> 
+        </ul>
+    </div>
+    </nav>
     <div id="upload-form">
         <label for="quiz">Quiz</label>
         <input id="quiz" name="quiz" type="file" value="" />
         <input id="upload" type="button" value="submit" />
     </div>
-    <input id="quiz-name" class="form-control"/>
-    <table id='quiz-table'>
+    <div display="inline-block">
+        <input id="quiz-name" class="form-control"/>
+        <input id="add-file" type='button' class='btn btn-primary' value='Add'/>
+    </div>
+    <table id='quiz-table' width="40%">
         <thead>
             <tr>
                 <td>Q</td>
@@ -49,9 +92,9 @@
             </tr>
         </thead>
         <tr>
-            <td><input class='input' count=1 type='textfield' class='form-control'></td>
-            <td><input class='input' count=2 type='textfield' class='form-control'></td>
-            <td><span class='glyphicon glyphicon-remove'></span></td>
+            <td><input class='input form-control' count=1 type='textfield'></td>
+            <td><input class='input form-control' count=2 type='textfield'></td>
+            <td><span class='glyphicon glyphicon-remove remove'></span></td>
         </tr>
 
     </table>
@@ -64,8 +107,8 @@
             if(event.keyCode == 9){
                 if($(this).attr('count') == count){
                     var rowHtml = "<tr><td>";
-                    rowHtml += "<input class='input' count=" + (count + 1) + " type='textfield' class='form-control' /></td>";
-                    rowHtml += "<td><input class='input' count=" + (count + 2) + " type='textfield' class='form-control' /></td>";
+                    rowHtml += "<input class='input form-control' count=" + (count + 1) + " type='textfield' /></td>";
+                    rowHtml += "<td><input class='input form-control' count=" + (count + 2) + " type='textfield' /></td>";
                     rowHtml += "<td><span class='glyphicon glyphicon-remove remove'></span></td>";
                     $("#quiz-table").append(rowHtml);
                     count += 2;
@@ -102,16 +145,20 @@
                 contentType: false, // Set content type to false as jQuery will tell the server its a query string request
                 success: function(data, textStatus, jqXHR)
                 {
-                    if(typeof data.error === 'undefined')
-                    {
-                        // Success so call function to process the form
-                        submitForm(event, data);
+                    console.log(data);
+                    var items = $.parseJSON(data).data;
+                    if($(".input[count=1]").val() == "" && $(".input[count=2]").val() == ""){
+                        count -= 2;
                     }
-                    else
-                    {
-                        // Handle errors here
-                        console.log('ERRORS: ' + data.error);
+                    for(var i = 0; i < items.length; i++){
+                        var rowHtml = "<tr><td>";
+                        rowHtml += "<input class='input form-control' count=" + (count + 1) + " type='textfield' value='"+items[i]['question']+"'/></td>";
+                        rowHtml += "<td><input class='input form-control' count="+ (count + 2) + " type='textfield' value='" + items[i]['answer']+ "'/></td>";
+                        rowHtml += "<td><span class='glyphicon glyphicon-remove remove'></span></td>";
+                        $("#quiz-table").append(rowHtml);
+                        count += 2;
                     }
+                    dialog.dialog("close");
                 },
                 error: function(jqXHR, textStatus, errorThrown)
                 {
@@ -120,6 +167,18 @@
                     // STOP LOADING SPINNER
                 }
             });
+        });
+        dialog = $( "#upload-form" ).dialog({
+      autoOpen: false,
+      height: 300,
+      width: 350,
+      modal: true,
+      close: function() {
+        dialog.dialog("close");
+        }
+    });
+        $("#add-file").on("click", function(){
+            dialog.dialog("open");
         });
     </script>
 </body>

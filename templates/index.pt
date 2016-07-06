@@ -49,7 +49,7 @@
                     if(data.roles.indexOf('admin') != -1){
                         window.location.href = '/manage';
                     }else{
-                        window.location.href="/first";
+                        window.location.href="/quizzes";
                     }
                 }
             });

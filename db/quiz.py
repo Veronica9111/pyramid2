@@ -24,6 +24,9 @@ class Quiz:
     def get_all_quizzes(self):
         return self._db.quizzes.find()
 
+    def get_all_quizzes_by_user(self, user_name):
+        return self._db.quizzes.find({'user' : user_name})
+
     def get_quiz_by_id(self, id):
         quiz = self._db.quizzes.find_one({'_id': ObjectId(id)})
         return quiz

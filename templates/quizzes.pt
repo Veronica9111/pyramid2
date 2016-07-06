@@ -20,9 +20,9 @@
     <link rel="stylesheet" type="text/css" href="static/css/select2.min.css">
 
     <style>
-    #user-table-div{
-        margin-top: 5em;
-        width: 70%;
+    #quiz-table-div{
+        margin-top: 1em;
+        width: 60%;
         margin-left: 20%;
     }
 
@@ -31,10 +31,40 @@
         margin-left: 15%;
         margin-right: 5%;
     }
+
+    #add-quiz{
+        float: right;
+        margin-right: 20%;
+        margin-bottom: 2em;
+    }
+
+    #quiz-table_filter{
+        margin-right: 50%;
+        margin-bottom: 3em;
+    }
+
+    #quiz-table_filter input{
+        width: 250%;
+    }
     </style>
 </head>
 <body>
-    <input id='add-quiz' type='button' value='添加' />
+     <nav class="navbar navbar-default">
+        <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">❤TopuTopu❤</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="/all">All</a></li>
+            <li><a href="/quizzes">Mine</a></li>
+            <li><a href="/records">Records</a></li>
+            <li><a href="mailto:johnnysangel@163.com?Subject=反馈意见" target="_top">Feedback</a></li>
+            <li><a href="/logout">Logout</a></li> 
+        </ul>
+    </div>
+    </nav>
+   <input id='add-quiz' type='button' value='添加' class='btn btn-primary'/>
     <div id="quiz-table-div">
         <table id="quiz-table" class="display" cellspacing="0" width="100%">
             <thead>
@@ -49,7 +79,7 @@
         </table>
     </div>
     <script>
-    $.post('/sets', {'type': 'datatable'}, function(data){
+    $.post('/sets', {'type': 'datatable', 'range': 'mine'}, function(data){
         console.log(data);
         var dataSet = $.parseJSON(data).data;
         console.log(dataSet);
@@ -64,11 +94,12 @@
                 {"title": ""},
             ]
         });
+        $('#quiz-table_filter input').addClass('form-control');
         
     });
 
     $("#add-quiz").on('click', function(){
-        window.location.href = '/quiz';
+        window.location.href = '/quiz/0';
     });
 $("#quiz-table").on("click", ".edit-quiz", function(){
             console.log('hit');

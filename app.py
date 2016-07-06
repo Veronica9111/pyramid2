@@ -4,6 +4,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 import json
 import shutil
+import hashlib
 from time import gmtime, strftime
 
 from wsgiref.simple_server import make_server
@@ -31,14 +32,20 @@ def login(request):
     password = request.params['password']
     user_db = User()
     user = user_db.get_user(name)
-    if password == user['password']:
+    if user is None:
+        return {'status': 'nok', 'data': '该用户不存在！'}
+    m = hashlib.md5()
+    m.update(password)
+    passwordStr = m.hexdigest()
+    print passwordStr
+    if passwordStr == user['password']:
         print 'before session'
         request.session['name'] = name
         roles = user['roles']
         print 'ok'
         return {'status': 'ok', 'roles': roles}
     else:
-        return {'status':'nok'}
+        return {'status':'nok', 'data': '密码错误！'}
 
 @view_config(route_name='get_all_users', renderer='string')
 def get_all_users(request):
@@ -128,8 +135,16 @@ def operate_role(request):
 @view_config(route_name='get_all_sets', renderer='string')
 def get_all_sets(request):
     type=request.params['type']
+    range = ''
+    if 'range' in request.params:
+        range = request.params['range']
     quiz_db = Quiz()
-    quizzes = quiz_db.get_all_quizzes()
+    if range == 'mine':
+        print range
+        print request.session['name']
+        quizzes = quiz_db.get_all_quizzes_by_user(request.session['name'])
+    else:
+        quizzes = quiz_db.get_all_quizzes()
     data = []
     for quiz in quizzes:
         test_btn = "<input name='%s' class='test-quiz btn btn-success' type='button' value='测试' />" % quiz['_id']
@@ -186,9 +201,8 @@ def upload_img(request):
 def upload_quiz(request):
     file = request.POST['0'].file
     qh = Quiz_Handler(file)
-    qh.handle()
-    print file.readlines()
-    return {'status': 'ok'}
+    items = qh.get_items()
+    return json.dumps({'status': 'ok', 'data': items}, encoding="UTF-8", ensure_ascii=False)
 
 @view_config(route_name='logout', renderer='json')
 def logout(request):
