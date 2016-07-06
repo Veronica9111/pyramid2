@@ -20,7 +20,7 @@
     <link rel="stylesheet" type="text/css" href="static/css/select2.min.css">
 
     <style>
-    #quiz-table-div{
+    #history-table-div{
         margin-top: 1em;
         width: 60%;
         margin-left: 20%;
@@ -32,18 +32,12 @@
         margin-right: 5%;
     }
 
-    #add-quiz{
-        float: right;
-        margin-right: 20%;
-        margin-bottom: 2em;
-    }
-
-    #quiz-table_filter{
+    #history-table_filter{
         margin-right: 50%;
         margin-bottom: 3em;
     }
 
-    #quiz-table_filter input{
+    #history-table_filter input{
         width: 250%;
     }
     </style>
@@ -55,23 +49,23 @@
             <a class="navbar-brand" href="#">❤TopuTopu❤</a>
         </div>
         <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#">Home</a></li>
             <li><a href="/all">All</a></li>
             <li><a href="/quizzes">Mine</a></li>
-            <li><a href="/history">History</a></li>
+            <li class="active"><a href="/records">Records</a></li>
             <li><a href="mailto:johnnysangel@163.com?Subject=反馈意见" target="_top">Feedback</a></li>
             <li><a href="/logout">Logout</a></li> 
         </ul>
     </div>
     </nav>
-   <input id='add-quiz' type='button' value='添加' class='btn btn-primary'/>
-    <div id="quiz-table-div">
-        <table id="quiz-table" class="display" cellspacing="0" width="100%">
+    <div id="history-table-div">
+        <table id="history-table" class="display" cellspacing="0" width="100%">
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Owner</th>
                     <th>Updated Time</th>
-                    <th></th>
+                    <th>Progress</th>
                     <th></th>
                     <th></th>
                 </tr>
@@ -79,11 +73,11 @@
         </table>
     </div>
     <script>
-    $.post('/sets', {'type': 'datatable', 'range': 'mine'}, function(data){
+    $.post('/records', {'type': 'datatable', 'range': 'mine'}, function(data){
         console.log(data);
         var dataSet = $.parseJSON(data).data;
         console.log(dataSet);
-        $('#quiz-table').DataTable({
+        $('#history-table').DataTable({
             "processing": true,
             "data": dataSet,
             "columns": [
@@ -94,13 +88,10 @@
                 {"title": ""},
             ]
         });
-        $('#quiz-table_filter input').addClass('form-control');
+        $('#history-table_filter input').addClass('form-control');
         
     });
 
-    $("#add-quiz").on('click', function(){
-        window.location.href = '/quiz/0';
-    });
 $("#quiz-table").on("click", ".edit-quiz", function(){
             console.log('hit');
             var id = $(this).attr('name');

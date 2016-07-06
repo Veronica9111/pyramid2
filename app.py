@@ -21,6 +21,7 @@ from db.user import User
 from db.permission import Permission
 from db.role import Role
 from db.quiz import Quiz
+from db.record import Record
 from quiz import Quiz_Handler
 
 def hello_world(request):
@@ -154,6 +155,25 @@ def get_all_sets(request):
             data.append([quiz['name'], quiz['updated_time'], test_btn, edit_btn, delete_btn])
     return json.dumps({'status': 'ok', 'data': data}, encoding="UTF-8", ensure_ascii=False)
 
+@view_config(route_name='get_all_records', renderer='string')
+def get_all_records(request):
+    type = request.params['type']
+    range = ''
+    record_db = Record()
+    if 'range' in request.params:
+        range = request.params['range']
+        if range == 'mine':
+            records = record_db.get_all_records_by_user(request.session['name'])
+    else:
+        records = record_db.get_all_records()
+    data = []
+    for record in records:
+        progress_btn = ""
+        restart_btn = ""
+        if type == 'datatable':
+            data.append(record['set_name'], record['owner'], record['time'], record['progress'], progress_btn, restart_btn)
+    return json.dumps({'status': 'ok', 'data': data}, encoding="UTF-8", ensure_ascii=False)
+
 @view_config(route_name='operate_set', renderer='string')
 def operate_set(request):
     method = request.params['method']
@@ -238,6 +258,10 @@ def test(request):
     if 'id' in request.matchdict:
         return {'name': 'test'}
 
+@view_config(renderer='templates/history.pt')
+def history(request):
+    return {'name': 'history'}
+
 def quiz(request):
     print request.matchdict
     if 'id' in request.matchdict:
@@ -273,6 +297,8 @@ if __name__ == '__main__':
     config.add_route('operate_set', '/set')
     config.add_route('get_all_sets', '/sets')
     config.add_route('test', '/test/{id}')
+    config.add_route('history', '/history')
+    config.add_route('get_all_records', '/records')
     config.add_route('index', '')
     config.add_static_view(name='static', path='/Users/veronica/Documents/pyramid2/static')
     config.add_view(hello_world, route_name='hello')
@@ -281,6 +307,7 @@ if __name__ == '__main__':
     config.add_view(manage, route_name='manage', renderer='__main__:templates/manage.pt')
     config.add_view(show, route_name='show', renderer='__main__:templates/show.pt')
     config.add_view(test, route_name='test', renderer='__main__:templates/test.pt')
+    config.add_view(history, route_name='history', renderer='__main__:templates/history')
     config.add_view(login, route_name='login', renderer='json')
     config.add_view(logout, route_name='logout', renderer='json')
     config.add_view(get_all_users, route_name='get_all_users', renderer='string')
@@ -294,6 +321,7 @@ if __name__ == '__main__':
     config.add_view(quizzes, route_name='quizzes', renderer='__main__:templates/quizzes.pt')
     config.add_view(get_all_sets, route_name='get_all_sets', renderer='string')
     config.add_view(operate_set, route_name='operate_set', renderer='string')
+    config.add_view(get_all_records, route_name='get_all_records', renderer='string')
     app = config.make_wsgi_app()
     server = make_server('0.0.0.0', 8080, app)
     server.serve_forever()
