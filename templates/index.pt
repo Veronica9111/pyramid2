@@ -10,6 +10,10 @@
 
     <!-- Latest compiled and minified JavaScript -->
     <script src="static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui-1.10.0.custom.css">
+
     <style>
         #login-form{
             margin: auto 40%;
@@ -36,7 +40,20 @@
             <input id="username" type="textfield" class="form-control" placeholder="username"/>
             <input id="password" type="password" class="form-control"/>
             <input id="login" type="button" class="btn btn-primary" value="Login"/>
+            <a id="register">Register</a>
         </div>
+    </div>
+    <div id='register-dialog'>
+        <table>
+            <tr>
+                <td>用户名</td>
+                <td><input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1"></td>
+            </tr>
+            <tr>
+                <td>邮箱</td>
+                <td><input type="text" class="form-control" placeholder="邮箱" aria-describedby="basic-addon1"></td>
+            </tr>
+        </table>
     </div>
     <script>
         $("#login").on('click', function(){
@@ -53,6 +70,26 @@
                     }
                 }
             });
+        });
+
+        $("#register").on('click', function(){
+            dialog = $("#register-dialog").dialog({
+                autoOpen: false,
+                height: 400,
+                width: 350,
+                modal: true,
+                buttons: {
+                    "Register": function(){
+                        $.post("/register", {"name": $("#name").val(), "mail": $("#mail").val()}, function(data){
+
+                        });
+                    }
+                },
+                close: function(){
+                    dialog.dialog("close");
+                }
+            });
+            dialog.dialog("open");
         });
     </script>
 </body>

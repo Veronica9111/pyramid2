@@ -256,6 +256,22 @@ def logout(request):
     del request.session['name']
     return {'status': 'ok'}
 
+@view_config(route_name='register', renderer='json')
+def register(request):
+    name = request.params['name']
+    mail = request.params['mail']
+    password = strftime("%Y-%m-%d %H:%M:%S", gmtime()) + name
+    m = hashlib.md5()
+    m.update(password)
+    passwordStr = m.hexdigest()
+    password = passwordStr[:6]
+    m.update(password)
+    passwordStr = m.hexdigest()
+    print password
+    user_db = User()
+    user_db.add_user(name, passwordStr, mail, ['admin'])
+    return {'status': 'ok'}
+
 @view_config(renderer='templates/index.pt')
 def index(request):
     return {'name': 'hola'}
@@ -293,6 +309,10 @@ def history(request):
 def result(request):
     return {'name': 'result'}
 
+@view_config(renderer='templates/all.pt')
+def all(request):
+    return {'name': 'all'}
+
 def quiz(request):
     print request.matchdict
     if 'id' in request.matchdict:
@@ -324,6 +344,7 @@ if __name__ == '__main__':
     config.add_route('upload_quiz', '/upload_quiz')
     config.add_route('download_quiz', '/download_quiz')
     config.add_route('quizzes', '/quizzes')
+    config.add_route('all', '/all')
     config.add_route('quiz', '/quiz/{id}')
     config.add_route('operate_set', '/set')
     config.add_route('get_all_sets', '/sets')
@@ -332,6 +353,7 @@ if __name__ == '__main__':
     config.add_route('result', '/result/{id}')
     config.add_route('operate_record', '/record')
     config.add_route('get_all_records', '/records')
+    config.add_route('register', '/register')
     config.add_route('index', '')
     config.add_static_view(name='static', path='/Users/veronica/Documents/pyramid2/static')
     config.add_view(hello_world, route_name='hello')
@@ -342,6 +364,7 @@ if __name__ == '__main__':
     config.add_view(test, route_name='test', renderer='__main__:templates/test.pt')
     config.add_view(history, route_name='history', renderer='__main__:templates/history.pt')
     config.add_view(result, route_name='result', renderer='__main__:templates/result.pt')
+    config.add_view(all, route_name='all', renderer='__main__:templates/all.pt')
     config.add_view(login, route_name='login', renderer='json')
     config.add_view(logout, route_name='logout', renderer='json')
     config.add_view(get_all_users, route_name='get_all_users', renderer='string')
@@ -357,6 +380,7 @@ if __name__ == '__main__':
     config.add_view(operate_set, route_name='operate_set', renderer='string')
     config.add_view(get_all_records, route_name='get_all_records', renderer='string')
     config.add_view(operate_record, route_name='operate_record', renderer='string')
+    config.add_view(register, route_name='register', renderer='json')
     app = config.make_wsgi_app()
     server = make_server('0.0.0.0', 8080, app)
     server.serve_forever()

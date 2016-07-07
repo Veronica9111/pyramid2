@@ -35,13 +35,36 @@
     #correct{
         color: green;
     }
+
+    #test-box{
+        width: 50%;
+        margin-left: 25%;
+        margin-top: 5em;
+    }
     </style>
 </head>
 <body>
-    <div class="jumbotron">
+     <nav class="navbar navbar-default">
+        <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">❤TopuTopu❤</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="#">Home</a></li>
+            <li><a href="/all">All</a></li>
+            <li><a href="/quizzes">Mine</a></li>
+            <li><a href="/history">History</a></li>
+            <li><a href="mailto:johnnysangel@163.com?Subject=反馈意见" target="_top">Feedback</a></li>
+            <li><a href="/logout">Logout</a></li> 
+        </ul>
+    </div>
+    </nav>
+
+    <div id="test-box" class="jumbotron">
         <h1 id='question'></h1>
         <input id='answer' class='form-control'/>
         <h2 id='correct'></h2>
+        <input id='submit' type='button' class='btn btn-primary' value='提交'/>
     </div>
     <script>
         count = 0;
@@ -59,36 +82,46 @@
                 
             
         });
+
+        function checkAnswer(){
+            if($('#answer').val() == answer){
+                console.log('correct');
+                if(!(count in result)){
+                    result[count] = 0;
+                }
+                $("#correct").html("");
+                if(count <length){
+                    $("#question").html(items[count]['question']);
+                    $("#answer").val("");
+                    answer = items[count]['answer'];
+                    count++;
+                }else{
+                    console.log(result);
+                    //alert("Correct rate is: " + (correctCount * 100 /length) + "%");
+                }
+
+            }else{
+                if(!(count in result)){
+                    result[count] = 1;
+                }else{
+                    result[count] += 1;
+                }
+                console.log('wrong');
+                $("#correct").html(answer).show("fast").delay(5000).hide("slow");
+                $("#answer").val("");
+            }
+
+        }
         $('#answer').on('keypress', function(event){
             if(event.keyCode == 13){
-                if($('#answer').val() == answer){
-                    console.log('correct');
-                    if(!(count in result)){
-                        result[count] = 0;
-                    }
-                    $("#correct").html("");
-                    if(count <length){
-                        $("#question").html(items[count]['question']);
-                        $("#answer").val("");
-                        answer = items[count]['answer'];
-                        count++;
-                    }else{
-                        console.log(result);
-                        //alert("Correct rate is: " + (correctCount * 100 /length) + "%");
-                    }
-
-                }else{
-                    if(!(count in result)){
-                        result[count] = 1;
-                    }else{
-                        result[count] += 1;
-                    }
-                    console.log('wrong');
-                    $("#correct").html(answer).show("slow").hide("slow");
-                    $("#answer").val("");
-                }
+                checkAnswer();
             }
         });
+
+        $("#submit").on('click', function(){
+            checkAnswer();
+        });
+       
     </script>
 </body>
 </html>

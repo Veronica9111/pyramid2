@@ -11,8 +11,8 @@ class User:
         client = MongoClient('localhost', 27017)
         self._db = client.test_database
 
-    def add_user(self,username, password, roles):
-        user = {'name':username, 'password':password, 'roles':roles}
+    def add_user(self,username, password, mail, roles):
+        user = {'name':username, 'password':password, 'mail': mail, 'roles':roles}
         users = self._db.users
         users.insert_one(user)
 
