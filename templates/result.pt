@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/static/js/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/semantic.min.js"></script>
+    <link rel="stylesheet" type="text/css" class="ui" href="/static/css/semantic.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="/static/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.min.css">
+    <script type="text/javascript" src="/static/js/select2.full.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/select2.min.css">
+
+    <style>
+    #user-table-div{
+        margin-top: 5em;
+        width: 70%;
+        margin-left: 20%;
+    }
+
+    #tabs{
+        margin-top: 6em;
+        margin-left: 15%;
+        margin-right: 5%;
+    }
+
+    #correct{
+        color: green;
+    }
+    </style>
+</head>
+<body>
+     <nav class="navbar navbar-default">
+        <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">❤TopuTopu❤</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="#">Home</a></li>
+            <li><a href="/all">All</a></li>
+            <li><a href="/quizzes">Mine</a></li>
+            <li class="active"><a href="/records">Records</a></li>
+            <li><a href="mailto:johnnysangel@163.com?Subject=反馈意见" target="_top">Feedback</a></li>
+            <li><a href="/logout">Logout</a></li> 
+        </ul>
+    </div>
+    </nav>
+    <h2 id="title"></h2>
+    <div id='result-table-div'>
+        <table id='result-table'>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Time</th>
+                    <th></th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    <script>
+        var id = window.location.pathname.split("/")[2];
+        $.post('/record', {'method': 'GET', 'type': 'datatable', 'id': id}, function(data){
+            var name = $.parseJSON(data).data['name'];
+            $("#title").html(name);
+            var dataSet = $.parseJSON(data).data['data'];
+            $("#result-table").DataTable({
+                "progressing": true,
+                "data": dataSet,
+                "columns": [
+                    {"title": "Name"},
+                    {"title": "Time"},
+                    {"title": ""}
+                ]
+            })
+            
+        });
+    </script>
+
+</body>
+</html>

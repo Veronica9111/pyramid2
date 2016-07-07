@@ -160,6 +160,7 @@ def get_all_records(request):
     type = request.params['type']
     range = ''
     record_db = Record()
+    quiz_db = Quiz()
     if 'range' in request.params:
         range = request.params['range']
         if range == 'mine':
@@ -168,10 +169,16 @@ def get_all_records(request):
         records = record_db.get_all_records()
     data = []
     for record in records:
-        progress_btn = ""
-        restart_btn = ""
+        id = "%s" % record['_id']
+        quiz = quiz_db.get_quiz_by_id(id)
+        if record['progress'] == '100':
+            progress = 'result'
+        else:
+            progress = record['progress'] + '%'
+        progress_btn = "<input name='%s' type='button' class='progress-quiz btn btn-primary' value='%s'/>" % (record['_id'], progress)
+        restart_btn = "<input name='%s' type='button' class='restart-quiz btn btn-success' value='Restart' />" % record['_id']
         if type == 'datatable':
-            data.append(record['set_name'], record['owner'], record['time'], record['progress'], progress_btn, restart_btn)
+            data.append([record['set_name'], record['owner'], record['updated_time'], record['progress'], progress_btn, restart_btn])
     return json.dumps({'status': 'ok', 'data': data}, encoding="UTF-8", ensure_ascii=False)
 
 @view_config(route_name='operate_set', renderer='string')
@@ -208,6 +215,26 @@ def operate_set(request):
     elif method == 'DELETE':
         print 'delete'
     return json.dumps({'status': 'ok', 'data': data}, encoding="UTF-8", ensure_ascii=False)
+
+@view_config(route_name='operate_record', renderer='string')
+def operate_record(request):
+    method = request.params['method']
+    record_db = Record()
+    data = []
+    result = {}
+    if method == 'GET':
+        id = request.params['id']
+        record = record_db.get_record_by_id(id)
+        set_name = record['set_name']
+        items = record['items']
+        type = request.params['type']
+        if type == 'datatable':
+            for item in items:
+                cp_btn = "<input question='%s' answer='%s' class='copy-word btn' type='button' value='Copy'/>" % (item['question'], item['answer'])
+                data.append([item['question'], item['count'], cp_btn])
+        result['name'] = set_name
+        result['data'] = data
+    return json.dumps({'status': 'ok', 'data': result}, encoding="UTF-8", ensure_ascii=False)
 
 @view_config(route_name='upload_img', renderer='json')
 def upload_img(request):
@@ -262,6 +289,10 @@ def test(request):
 def history(request):
     return {'name': 'history'}
 
+@view_config(renderer='templates/result.pt')
+def result(request):
+    return {'name': 'result'}
+
 def quiz(request):
     print request.matchdict
     if 'id' in request.matchdict:
@@ -298,6 +329,8 @@ if __name__ == '__main__':
     config.add_route('get_all_sets', '/sets')
     config.add_route('test', '/test/{id}')
     config.add_route('history', '/history')
+    config.add_route('result', '/result/{id}')
+    config.add_route('operate_record', '/record')
     config.add_route('get_all_records', '/records')
     config.add_route('index', '')
     config.add_static_view(name='static', path='/Users/veronica/Documents/pyramid2/static')
@@ -307,7 +340,8 @@ if __name__ == '__main__':
     config.add_view(manage, route_name='manage', renderer='__main__:templates/manage.pt')
     config.add_view(show, route_name='show', renderer='__main__:templates/show.pt')
     config.add_view(test, route_name='test', renderer='__main__:templates/test.pt')
-    config.add_view(history, route_name='history', renderer='__main__:templates/history')
+    config.add_view(history, route_name='history', renderer='__main__:templates/history.pt')
+    config.add_view(result, route_name='result', renderer='__main__:templates/result.pt')
     config.add_view(login, route_name='login', renderer='json')
     config.add_view(logout, route_name='logout', renderer='json')
     config.add_view(get_all_users, route_name='get_all_users', renderer='string')
@@ -322,6 +356,7 @@ if __name__ == '__main__':
     config.add_view(get_all_sets, route_name='get_all_sets', renderer='string')
     config.add_view(operate_set, route_name='operate_set', renderer='string')
     config.add_view(get_all_records, route_name='get_all_records', renderer='string')
+    config.add_view(operate_record, route_name='operate_record', renderer='string')
     app = config.make_wsgi_app()
     server = make_server('0.0.0.0', 8080, app)
     server.serve_forever()

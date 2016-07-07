@@ -86,16 +86,17 @@
                 {"title": ""},
                 {"title": ""},
                 {"title": ""},
+                {"title": ""}
             ]
         });
         $('#history-table_filter input').addClass('form-control');
         
     });
 
-$("#quiz-table").on("click", ".edit-quiz", function(){
+$("#history-table").on("click", ".progress-quiz", function(){
             console.log('hit');
             var id = $(this).attr('name');
-            window.location.href = '/quiz/' + id;
+            window.location.href = '/result/' + id;
         });
 
     </script>
