@@ -30,6 +30,16 @@
         #login{
             margin-top: 1em;
         }
+
+        #register{
+            margin-left: 1em;
+            cursor: pointer;
+        }
+
+        #register-dialog td{
+            padding-top: 1em;
+            padding-left: 1.5em;
+        }
     </style>
 
 </head>
@@ -47,15 +57,107 @@
         <table>
             <tr>
                 <td>用户名</td>
-                <td><input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1"></td>
+                <td><input id="name" class="form" type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1"></td>
+                <td id="name-error"></td>
             </tr>
             <tr>
                 <td>邮箱</td>
-                <td><input type="text" class="form-control" placeholder="邮箱" aria-describedby="basic-addon1"></td>
+                <td><input id="mail" class="form" type="text" class="form-control" placeholder="邮箱" aria-describedby="basic-addon1"></td>
+                <td id="mail-error"></td>
+            </tr>
+            <tr>
+                <td>密码</td>
+                <td><input id="r-password" class="form" type="password" class="form-control" placeholder="请输入密码"/></td>
+                <td id="password-error">
+            </tr>
+            <tr>
+                <td></td>
+                <td><input id="r-password2" class="form" type="password" class="form-control" placeholder="请再输入一遍密码"/></td>
+                <td id="password2-error"></td>
             </tr>
         </table>
     </div>
     <script>
+        isNameValid = false;
+        isMailValid = false;
+        isPasswordValid = false;
+        isPassword2Valid = false;
+        function submit(){
+            if(validate() != false){
+                $.post('/register', {'method': 'post', 'name': $("#name").val(), 'mail': $("#mail").val(), "password": $("#r-password").val()}, function(){
+
+                });
+            }
+        }
+
+        function validate(){
+            if(isNameValid == false || isMailValid == false || isPasswordValid == false || isPassword2Valid == false){
+                return false;
+            }
+            if($("#name").val() == ""){
+                $("#name-error").html("请输入用户名！");
+                return false;
+            }
+            if($("#mail").val() == ""){
+                $("#mail-error").html("请输入邮箱！");
+            }
+            if($("#r-password").val() == ""){
+                $("#password-error").html("请输入密码！");
+            }
+            return true;
+        }
+
+        $(".form").on('change', function(){
+            console.log("change");
+            var id = $(this).attr("id");
+            var value = $(this).val();
+            if(id == "name"){
+                $.post('/checkuser', {'name': value}, function(data){
+                    if(data.status == 'nok'){
+                        $("#name-error").html("该用户名已存在！");
+                        isNameValid = false;
+                    }else{
+                        $("#name-error").html("");
+                        isNameValid = true;
+                    }
+                });
+                //check user name
+            }else if(id == "mail"){
+                $.post('/checkmail', {'mail': value}, function(data){
+                    if(data.status == 'nok'){
+                        $("#mail-error").html("该邮箱已被使用！");
+                        isMailValid = false;
+                    }else{
+                        $("#mail-error").html("");
+                        isMailValid = true;
+                    }
+                });
+                //check mail
+            }else if(id == "r-password2"){
+                //check password
+                var password1 = $("#r-password").val();
+                var password2 = $("#r-password2").val();
+                if(password1 != password2){
+                    $("#password2-error").html("两遍密码不一致！");
+                    isPassword2Valid = false;
+                }else{
+                    $("#password2-error").html("");
+                    isPassword2Valid = true;
+                }
+            }else if(id == "r-password"){
+                console.log("hit");
+                var password = $("#r-password").val();
+                console.log(password);
+                if(password.length < 6){
+                    $("#password-error").html("密码至少6位！");
+                    isPasswordValid = false;
+                }else{
+                    $("#password-error").html("");
+                    isPasswordValid = true;
+                }
+            }
+        });
+
         $("#login").on('click', function(){
             var name = $("#username").val();
             var password = $("#password").val();
@@ -71,24 +173,23 @@
                 }
             });
         });
+        dialog = $("#register-dialog").dialog({
+            autoOpen: false,
+            height: 400,
+            width: 350,
+            modal: true,
+            buttons: {
+                "Register": function(){
+                    submit();
+
+                }
+            },
+            close: function(){
+                dialog.dialog("close");
+            }
+        });
 
         $("#register").on('click', function(){
-            dialog = $("#register-dialog").dialog({
-                autoOpen: false,
-                height: 400,
-                width: 350,
-                modal: true,
-                buttons: {
-                    "Register": function(){
-                        $.post("/register", {"name": $("#name").val(), "mail": $("#mail").val()}, function(data){
-
-                        });
-                    }
-                },
-                close: function(){
-                    dialog.dialog("close");
-                }
-            });
             dialog.dialog("open");
         });
     </script>

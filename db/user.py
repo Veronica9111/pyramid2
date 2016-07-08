@@ -22,6 +22,12 @@ class User:
     def get_all_users(self):
         return self._db.users.find()
 
+    def get_user_by_name(self, name):
+        return self._db.users.find_one({'name': name})
+
+    def get_user_by_mail(self, mail):
+        return self._db.users.find_one({'mail': mail})
+
 
 
 if __name__ == '__main__':

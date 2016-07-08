@@ -260,17 +260,34 @@ def logout(request):
 def register(request):
     name = request.params['name']
     mail = request.params['mail']
-    password = strftime("%Y-%m-%d %H:%M:%S", gmtime()) + name
+    password = request.params['password']
+    print password
     m = hashlib.md5()
     m.update(password)
     passwordStr = m.hexdigest()
-    password = passwordStr[:6]
-    m.update(password)
-    passwordStr = m.hexdigest()
-    print password
     user_db = User()
-    user_db.add_user(name, passwordStr, mail, ['admin'])
+    user_db.add_user(name, passwordStr, mail, ['user'])
     return {'status': 'ok'}
+
+@view_config(route_name='check_user', renderer='json')
+def check_user(request):
+    user_db = User()
+    name = request.params['name']
+    user = user_db.get_user_by_name(name)
+    if user:
+        return {'status': 'nok'}
+    else:
+        return {'status': 'ok'}
+
+@view_config(route_name='check_mail', renderer='json')
+def check_mail(request):
+    user_db = User()
+    mail = request.params['mail']
+    user = user_db.get_user_by_mail(mail)
+    if user:
+        return {'status': 'nok'}
+    else:
+        return {'status': 'ok'}
 
 @view_config(renderer='templates/index.pt')
 def index(request):
@@ -354,6 +371,8 @@ if __name__ == '__main__':
     config.add_route('operate_record', '/record')
     config.add_route('get_all_records', '/records')
     config.add_route('register', '/register')
+    config.add_route('check_user', '/checkuser')
+    config.add_route('check_mail', '/checkmail')
     config.add_route('index', '')
     config.add_static_view(name='static', path='/Users/veronica/Documents/pyramid2/static')
     config.add_view(hello_world, route_name='hello')
@@ -381,6 +400,8 @@ if __name__ == '__main__':
     config.add_view(get_all_records, route_name='get_all_records', renderer='string')
     config.add_view(operate_record, route_name='operate_record', renderer='string')
     config.add_view(register, route_name='register', renderer='json')
+    config.add_view(check_user, route_name='check_user', renderer='json')
+    config.add_view(check_mail, route_name='check_mail', renderer='json')
     app = config.make_wsgi_app()
     server = make_server('0.0.0.0', 8080, app)
     server.serve_forever()
