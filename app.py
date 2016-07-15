@@ -126,6 +126,7 @@ def operate_role(request):
         str = json.dumps(data, encoding="UTF-8", ensure_ascii=False)
         return json.dumps({'status': 'ok', 'data': str}, encoding="UTF-8", ensure_ascii=False)
     elif method == 'DELETE':
+        
         print 'delete one role'
     elif method == 'UPDATE_ROLE_PERMISSION':
         roleId = request.params['role_id']
@@ -150,9 +151,11 @@ def get_all_sets(request):
     for quiz in quizzes:
         test_btn = "<input name='%s' class='test-quiz btn btn-success' type='button' value='测试' />" % quiz['_id']
         edit_btn = "<input name='%s' class='edit-quiz btn btn-primary' type='button' value='编辑' />" % quiz['_id']
-        delete_btn = "<input id='%s' class='delete-quiz btn btn-danger' type='button' value='删除' />" % quiz['_id']
+        delete_btn = "<input name='%s' class='delete-quiz btn btn-danger' type='button' value='删除' />" % quiz['_id']
         if type == 'datatable':
             data.append([quiz['name'], quiz['updated_time'], test_btn, edit_btn, delete_btn])
+        elif type == 'name':
+            data.append({'name': quiz['name'], 'id': "%s" % quiz['_id']})
     return json.dumps({'status': 'ok', 'data': data}, encoding="UTF-8", ensure_ascii=False)
 
 @view_config(route_name='get_all_records', renderer='string')
@@ -199,21 +202,32 @@ def operate_set(request):
         for i in range(0, len(items), 2):
             itemList.append({'question': items[i], 'answer': items[i+1]})
         time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        user_name = 'from session'
+        user_name = request.session['name']
         quiz_db.add_quiz(name, itemList, user_name, time)
         print 'post'
     elif method == 'UPDATE':
-        name = request.params['name']
+        if 'name' in request.params:
+            name = request.params['name']
+        else:
+            name = None
+        if 'type' in request.params:
+            type = request.params['type']
+        else:
+            type = None
+        id = request.params['id']
         items = request.params['items'].split(',')
         itemList = []
-        for i in range(0, len(items), 2):
+        for i in range( 0, len(items), 2):
             itemList.append({'question': items[i], 'answer': items[i+1]})
+        if type == 'append':
+            set = quiz_db.get_quiz_by_id(id)
+            itemList = set['items'] + itemList
         time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        id = request.params['id']
         quiz_db.update_quiz(id, itemList, name, time)
         print 'update'
     elif method == 'DELETE':
-        print 'delete'
+        id = request.params['id']
+        quiz_db.delete_quiz(id)
     return json.dumps({'status': 'ok', 'data': data}, encoding="UTF-8", ensure_ascii=False)
 
 @view_config(route_name='operate_record', renderer='string')
@@ -226,14 +240,61 @@ def operate_record(request):
         id = request.params['id']
         record = record_db.get_record_by_id(id)
         set_name = record['set_name']
+        set_id = record['set_id']
         items = record['items']
+        passed = record['passed']
         type = request.params['type']
         if type == 'datatable':
             for item in items:
-                cp_btn = "<input question='%s' answer='%s' class='copy-word btn' type='button' value='Copy'/>" % (item['question'], item['answer'])
-                data.append([item['question'], item['count'], cp_btn])
+                cp_btn = "<input question='%s' answer='%s' class='copy-word btn btn-primary' type='button' value='Copy'/>" % (item['question'], item['answer'])
+                data.append([item['question'], item['answer'], item['count'], cp_btn])
         result['name'] = set_name
         result['data'] = data
+        result['passed'] = passed
+        result['set_id'] = "%s" % set_id
+    elif method == 'GET_BY_SET':
+        set_id = request.params['id']
+        records = record_db.get_record_by_set_id(set_id)
+        print records
+        for record in records:
+            result['name'] = record['set_name']
+            result['updated_time'] = record['updated_time']
+            result['id'] = "%s" % record['_id']
+            break
+    elif method == 'POST':
+        set_id = request.params['set_id']
+        quiz_db = Quiz()
+        set = quiz_db.get_quiz_by_id(set_id)
+        set_name = set['name']
+        owner = set['user']
+        progress = 0
+        user = request.session['name']
+        record_db.add_record(set_name, set_id, owner, progress, user)
+    elif method == 'UPDATE':
+        id = request.params['id']
+        question = request.params['question']
+        answer = request.params['answer']
+        status = request.params['status']
+        record = record_db.get_record_by_id(id)
+        passed = record['passed']
+        if status == 'yes':
+            passed.append(question)
+        items = record['items']
+        hit = False
+        for item in items:
+            if question == item['question']:
+                hit = True
+                if status == 'no':
+                    item['count'] += 1
+                break
+        if hit == False:
+            if status == 'yes':
+                count = 0
+            else:
+                count = 1
+            items.append({'question': question, 'answer': answer, 'count': count})
+        record_db.update_record_by_id(id, items, passed)
+
     return json.dumps({'status': 'ok', 'data': result}, encoding="UTF-8", ensure_ascii=False)
 
 @view_config(route_name='upload_img', renderer='json')
@@ -288,6 +349,13 @@ def check_mail(request):
         return {'status': 'nok'}
     else:
         return {'status': 'ok'}
+
+@view_config(route_name='authentication', renderer="json")
+def authentication(request):
+    if 'name' in request.session:
+        return {'status': 'ok'}
+    else:
+        return {'status': 'nok'}
 
 @view_config(renderer='templates/index.pt')
 def index(request):
@@ -374,6 +442,7 @@ if __name__ == '__main__':
     config.add_route('check_user', '/checkuser')
     config.add_route('check_mail', '/checkmail')
     config.add_route('index', '')
+    config.add_route('authentication', '/authentication')
     config.add_static_view(name='static', path='/Users/veronica/Documents/pyramid2/static')
     config.add_view(hello_world, route_name='hello')
     config.add_view(index, route_name='index', renderer='__main__:templates/index.pt')
@@ -402,6 +471,7 @@ if __name__ == '__main__':
     config.add_view(register, route_name='register', renderer='json')
     config.add_view(check_user, route_name='check_user', renderer='json')
     config.add_view(check_mail, route_name='check_mail', renderer='json')
+    config.add_view(authentication, route_name='authentication', renderer='json')
     app = config.make_wsgi_app()
     server = make_server('0.0.0.0', 8080, app)
     server.serve_forever()

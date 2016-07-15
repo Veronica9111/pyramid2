@@ -70,34 +70,61 @@
         count = 0;
         result = {};
         var id = window.location.pathname.split("/")[2];
-        $.post('/set', {'id': id, 'method': 'GET'}, function(data){
+        $.post('/record', {'id': id, 'method': 'GET', 'type': 'list'}, function(data){
             var data = $.parseJSON(data);
-            items = data.data['items'];
-            length = items.length;
-            if(length > 0){
-                $("#question").html(items[0]['question']);
-                answer = items[0]['answer'];
-                count = 1;
-            }
-                
-            
+            var items = data.data['items'];
+            passedItems = data.data['passed'];
+            var setId = data.data['set_id'];
+            console.log(passedItems)
+            $.post('/set', {'id': setId, 'method': 'GET'}, function(data){
+                var data = $.parseJSON(data);
+                items = data.data['items'];
+                setItems = items;
+                length = items.length;
+                for (var i = 0; i < items.length; i++){
+                    if(passedItems.indexOf(items[i]['question']) == -1){
+                        answer = items[i]['answer'];
+                        question = items[i]['question'];
+                        $("#question").html(items[i]['question']);
+                        count = i + 1;
+                    }
+                }
+                console.log(items);
+            });
+
         });
 
+
+        function selectQuestion(){
+            var hit = false;
+            for(var i = 0; i < setItems.length; i++){
+                if(passedItems.indexOf(setItems[i]['question']) == -1){
+                    answer = setItems[i]['answer'];
+                    question = setItems[i]['question'];
+                    $("#question").html(question);
+                    hit = true;
+                }
+            }
+            return hit;
+        }
+
+        
         function checkAnswer(){
             if($('#answer').val() == answer){
                 console.log('correct');
+                passedItems.push(question);
                 if(!(count in result)){
                     result[count] = 0;
                 }
+                //Update record
+                $.post("/record", {'method': 'UPDATE', 'id': id, "question": question, 'answer': answer, 'status': 'yes'}, function(data){
+                    console.log(data);
+                });
                 $("#correct").html("");
-                if(count <length){
-                    $("#question").html(items[count]['question']);
-                    $("#answer").val("");
-                    answer = items[count]['answer'];
-                    count++;
-                }else{
-                    console.log(result);
-                    //alert("Correct rate is: " + (correctCount * 100 /length) + "%");
+                finished = !selectQuestion();
+                if(finished){
+                    alert('finished');
+                    window.location.href = '/history'; 
                 }
 
             }else{
@@ -107,6 +134,11 @@
                     result[count] += 1;
                 }
                 console.log('wrong');
+                //Update record
+                $.post("/record", {'method': 'UPDATE', 'id': id, "question": question, 'answer': answer, 'status': 'no'}, function(data){
+                    console.log(data);
+                });
+
                 $("#correct").html(answer).show("fast").delay(5000).hide("slow");
                 $("#answer").val("");
             }

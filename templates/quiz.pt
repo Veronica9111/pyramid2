@@ -58,6 +58,10 @@
         margin-right: 30%;
         margin-top: 2em;
     }
+
+    #upload{
+        margin-top: 2em;
+    }
     </style>
 </head>
 <body>
@@ -77,7 +81,7 @@
     <div id="upload-form">
         <label for="quiz">Quiz</label>
         <input id="quiz" name="quiz" type="file" value="" />
-        <input id="upload" type="button" value="submit" />
+        <input id="upload" class="btn btn-primary" type="button" value="submit" />
     </div>
     <div display="inline-block">
         <input id="quiz-name" class="form-control"/>
@@ -123,6 +127,10 @@
             $("#quiz-name").val();
             var set = $(".input").map(function(){return $(this).val();}).get();
             $.post('/set', {'method': 'POST', 'name': $("#quiz-name").val(), 'items': set.toString()}, function(data){
+                var data = $.parseJSON(data);
+                if(data.status == 'ok'){
+                    window.location.href = '/quizzes';
+                }
                 
             });
             console.log(set);

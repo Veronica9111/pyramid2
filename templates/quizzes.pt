@@ -18,6 +18,7 @@
     <link rel="stylesheet" type="text/css" href="static/css/jquery-ui.min.css">
     <script type="text/javascript" src="static/js/select2.full.min.js"></script>
     <link rel="stylesheet" type="text/css" href="static/css/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui-1.10.0.custom.css">
 
     <style>
     #quiz-table-div{
@@ -78,12 +79,16 @@
             </thead>
         </table>
     </div>
+    <div id="test-dialog">
+        <input type="button" class="btn btn-primary" value="继续上次测试" id="continue"/>
+        <input type="button" class="btn btn-primary" value="重新开始" id="restart"/>
+    </div>
     <script>
     $.post('/sets', {'type': 'datatable', 'range': 'mine'}, function(data){
         console.log(data);
         var dataSet = $.parseJSON(data).data;
         console.log(dataSet);
-        $('#quiz-table').DataTable({
+        table = $('#quiz-table').DataTable({
             "processing": true,
             "data": dataSet,
             "columns": [
@@ -101,12 +106,65 @@
     $("#add-quiz").on('click', function(){
         window.location.href = '/quiz/0';
     });
-$("#quiz-table").on("click", ".edit-quiz", function(){
+
+    dialog = $( "#test-dialog" ).dialog({
+      autoOpen: false,
+      height: 300,
+      width: 350,
+      modal: true,
+      buttons: {
+        Cancel: function() {
+          dialog.dialog( "close" );
+        }
+      },
+      close: function() {
+        dialog.dialog("close");
+        }
+    });
+
+    $("#quiz-table").on("click", ".test-quiz", function(){
+        var id = $(this).attr('name');
+        $.post("/record", {'method': 'GET_BY_SET', 'id': id}, function(data){
+            console.log(data);
+            var dataSet = $.parseJSON(data);
+            if (dataSet.data != ""){
+                $("#continue").on("click", function(){
+                    window.location.href = '/test/' + dataSet.data['id'];
+                });
+                $("#restart").on("click", function(){
+                    $.post('/record', {'method': 'POST', 'set_id': id}, function(data){
+                        console.log(data);
+                        window.location.href = '/test/' + data.data['id'];
+                    });
+                    //Create new record
+                });
+                dialog.dialog("open");
+            }else{
+                //create new record
+                $.post('/record', {'method': 'POST', 'set_id': id}, function(data){
+                    window.location.href = '/test/' + data.data['id'];
+                });
+            }
+        });
+    });
+    $("#quiz-table").on("click", ".edit-quiz", function(){
             console.log('hit');
             var id = $(this).attr('name');
             window.location.href = '/quiz/' + id;
         });
 
+    $('#quiz-table').on( 'click', '.delete-quiz', function () {
+        var id = $(this).attr('name');
+        var td = $(this);
+        console.log(id);
+        $.post('/set', {'method': 'DELETE','id': id}, function(data){
+        table
+        .row( td.parents('tr') )
+        .remove()
+        .draw();
+
+        });
+    } );
     </script>
 </body>
 </html>

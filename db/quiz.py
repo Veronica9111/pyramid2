@@ -19,7 +19,10 @@ class Quiz:
         return id
 
     def update_quiz(self, objectId, quiz_items, name, updated_time):
-        self._db.quizzes.update({'_id': ObjectId(objectId)}, {'$set':{'items': quiz_items, 'name': name, 'updated_time': updated_time}}, False, True)
+        if name is None:
+            self._db.quizzes.update({'_id': ObjectId(objectId)}, {'$set':{'items': quiz_items, 'updated_time': updated_time}}, False, True)
+        else:
+            self._db.quizzes.update({'_id': ObjectId(objectId)}, {'$set':{'items': quiz_items, 'name': name, 'updated_time': updated_time}}, False, True)
 
     def get_all_quizzes(self):
         return self._db.quizzes.find()
@@ -30,3 +33,6 @@ class Quiz:
     def get_quiz_by_id(self, id):
         quiz = self._db.quizzes.find_one({'_id': ObjectId(id)})
         return quiz
+
+    def delete_quiz(self, id):
+        self._db.quizzes.delete_one({'_id': ObjectId(id)})

@@ -16,8 +16,7 @@
     <script type="text/javascript" src="/static/js/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.min.css">
-    <script type="text/javascript" src="/static/js/select2.full.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/css/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui-1.10.0.custom.css">
 
     <style>
     #user-table-div{
@@ -59,14 +58,47 @@
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Answer</th>
                     <th>Time</th>
                     <th></th>
                 </tr>
             </thead>
         </table>
     </div>
+    <div id="set-dialog">
+        <div class="ui-widget">
+  <label>Your preferred programming language: </label>
+  <select id="combobox">
+  </select>
+</div>
+    </div>
     <script>
+        $.post("/authentication", {}, function(data){
+            if(data.status == 'nok'){
+                window.location.href = '/';
+            }
+        });
+
+
         var id = window.location.pathname.split("/")[2];
+        dialog = $( "#set-dialog" ).dialog({
+          autoOpen: false,
+          height: 400,
+          width: 350,
+          modal: true,
+          buttons: {
+            "Copy": function(){
+                var id = $("#combobox").val();
+                $.post("/set", {"method": "UPDATE","id": id, "items": question + "," + answer, 'type': 'append'}, function(){});
+            },
+            Cancel: function() {
+              dialog.dialog( "close" );
+            }
+          },
+          close: function() {
+            dialog.dialog("close");
+          }
+        });
         $.post('/record', {'method': 'GET', 'type': 'datatable', 'id': id}, function(data){
             var name = $.parseJSON(data).data['name'];
             $("#title").html(name);
@@ -76,11 +108,40 @@
                 "data": dataSet,
                 "columns": [
                     {"title": "Name"},
+                    {"title": "Answer"},
                     {"title": "Time"},
                     {"title": ""}
-                ]
-            })
+                ],
+                 "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                    console.log(aData);
+                    if(aData[2] != 0){
+                        $(nRow).css('background-color', 'mistyrose');
+                    }else{
+                        $(nRow).css('background-color', 'honeydew');
+                    }
+    }
+            });
             
+        });
+
+        $("#result-table").on("click", ".copy-word", function(){
+            question = $(this).parents("tr").children()[0].innerHTML;
+            answer = $(this).parents("tr").children()[1].innerHTML;
+            console.log(question);
+            console.log(answer);
+            //console.log($(this).parents("tr"));
+            $.post('/sets',{'range': 'mine', 'type': 'name'},function(data){
+                console.log(data);
+                var dataSet = $.parseJSON(data).data;
+                var optionHtml = "";
+                for(var i = 0; i < dataSet.length; i++){
+                    optionHtml += '<option value="' + dataSet[i]['id'] + '">'+ dataSet[i]['name']+'</option>';
+                }
+                console.log(optionHtml);
+                $("#combobox").append(optionHtml);
+                dialog.dialog("open");
+            });
+            alert("click");
         });
     </script>
 
